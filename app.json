@@ -1,17 +1,20 @@
 {
   "expo": {
-    "name": "blumsens-app",
-    "slug": "blumsens-app",
+    "name": "BlümSens",
+    "slug": "blumsens",
     "version": "1.0.0",
+    "scheme": "blumsens",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.blumsens.app"
     },
     "android": {
+      "package": "com.blumsens.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#48684A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,7 +22,37 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-image",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#48684A"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BlümSens usa la cámara para escanear hojas y el código QR de tus módulos.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BlümSens usa tus fotos para analizar hojas de tus plantas."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
