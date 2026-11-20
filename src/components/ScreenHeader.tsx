@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icons } from '@/assets';
@@ -30,7 +31,7 @@ export function BackButton({
 }
 
 /** Encabezado de pantallas secundarias: [←] Título + subtítulo. */
-export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.row}>
@@ -39,10 +40,13 @@ export function ScreenHeader({ title, subtitle }: { title: string; subtitle?: st
           {title}
         </AppText>
       </View>
-      {subtitle ? (
-        <AppText size={13} lineHeight={18} color={colors.muted} style={styles.subtitle}>
-          {subtitle}
-        </AppText>
+      {subtitle || right ? (
+        <View style={styles.subtitleRow}>
+          <AppText size={13} lineHeight={18} color={colors.muted} style={styles.title}>
+            {subtitle}
+          </AppText>
+          {right}
+        </View>
       ) : null}
     </View>
   );
@@ -52,6 +56,6 @@ const styles = StyleSheet.create({
   wrap: { paddingHorizontal: gutter, paddingTop: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   title: { flex: 1 },
-  subtitle: { marginTop: 14 },
+  subtitleRow: { marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 12, paddingRight: 3 },
   back: { width: 40, height: 40, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
 });

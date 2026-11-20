@@ -45,7 +45,7 @@ También funciona en el navegador con `npx expo start --web`, aunque la cámara 
 
 Para volver al estado inicial: **Módulos → Restablecer datos**.
 
-> **Tip:** para escanear un QR "real" en Vincular módulo, toca **Usar cámara** y apunta a un QR que contenga el texto `BLM-ESP32-005` (puedes generarlo en cualquier generador de QR).
+> **QR de los módulos:** en *Vincular módulo* la cámara se abre sola y lee el QR. El QR contiene solo el **número de serie** en texto plano (por ejemplo `BLM-ESP32-004`), que puede tener letras, números, `-`, `_` o `.`, entre 3 y 40 caracteres. Hay QR de prueba listos para imprimir en `../qr-modulos/`. Si no hay cámara, puedes usar **Simular escaneo** o escribir el número de serie a mano.
 
 ---
 

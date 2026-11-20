@@ -1,7 +1,7 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import type { FC } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SvgProps } from 'react-native-svg';
 
@@ -9,7 +9,6 @@ import { Dots, Icons } from '@/assets';
 import { AppText, Eyebrow } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { BackButton } from '@/components/ScreenHeader';
 import { StatusInline } from '@/components/StatusPill';
 import { formatAgo, formatNumber, formatRange, formatRelativeDay, formatTime } from '@/lib/format';
 import { lightDescription, lightStatus, moistureStatus, tempStatus } from '@/lib/insights';
@@ -88,7 +87,15 @@ export default function Monitor() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topBar}>
-          <BackButton />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            hitSlop={10}
+            onPress={() => (router.canGoBack() ? router.back() : router.navigate('/plants'))}
+            style={({ pressed }) => pressed && { opacity: 0.6 }}
+          >
+            <Icons.backCompact width={25} height={25} />
+          </Pressable>
           <AppText size={19} lineHeight={26} weight="semibold" color={colors.forest} style={styles.flex}>
             BlümSens
           </AppText>
@@ -199,17 +206,14 @@ export default function Monitor() {
               />
             )}
             <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="Ver más sobre el módulo"
               hitSlop={10}
               style={styles.help}
-              onPress={() =>
-                Alert.alert(
-                  'Ayuda con tu módulo',
-                  '1. Verifica que el módulo tenga batería o esté conectado a USB.\n2. Acércalo a tu router Wi-Fi (2.4 GHz).\n3. Mantén presionado el botón del ESP32 por 3 s para reiniciarlo.',
-                )
-              }
+              onPress={() => router.navigate('/modules')}
             >
               <AppText size={12} lineHeight={16} weight="medium" color={colors.forest}>
-                Ayuda
+                Ver más
               </AppText>
               <Icons.chevronRight width={16} height={16} />
             </Pressable>
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.white },
   content: { paddingHorizontal: gutter + 5 },
   flex: { flex: 1 },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  topBar: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 6 },
   tiles: { marginTop: 14, flexDirection: 'row', gap: 16 },
   tile: { flex: 1, height: 136 },
   tileHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },

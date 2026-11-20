@@ -11,6 +11,9 @@ import DotRed7 from '@assets/figma/dot-red-7.svg';
 import IconArrow from '@assets/figma/icon-arrow.svg';
 import IconBack from '@assets/figma/icon-back.svg';
 import IconBackWhite from '@assets/figma/icon-back-white.svg';
+import IconBackCompact from '@assets/figma/icon-back-compact.svg';
+import IconBellNotification from '@assets/figma/icon-bell-notification.svg';
+import BadgeDot from '@assets/figma/badge-dot.svg';
 import IconBellActive from '@assets/figma/icon-bell-active.svg';
 import IconBellInactive from '@assets/figma/icon-bell-inactive.svg';
 import IconCamera from '@assets/figma/icon-camera.svg';
@@ -64,6 +67,9 @@ export const Icons = {
   arrow: IconArrow,
   back: IconBack,
   backWhite: IconBackWhite,
+  backCompact: IconBackCompact,
+  bellNotification: IconBellNotification,
+  badgeDot: BadgeDot,
   bellActive: IconBellActive,
   bellInactive: IconBellInactive,
   camera: IconCamera,

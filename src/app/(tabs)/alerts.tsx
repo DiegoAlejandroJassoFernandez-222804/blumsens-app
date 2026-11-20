@@ -7,6 +7,7 @@ import { Icons } from '@/assets';
 import { AlertCard } from '@/components/AlertCard';
 import { AppText, Eyebrow } from '@/components/AppText';
 import { tapFeedback } from '@/components/Button';
+import { BackButton } from '@/components/ScreenHeader';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import type { AlertKind } from '@/data/types';
 import { useGarden } from '@/store/garden';
@@ -50,9 +51,12 @@ export default function Alerts() {
       showsVerticalScrollIndicator={false}
     >
       <Eyebrow>TU JARDÍN TE AVISA</Eyebrow>
-      <AppText size={28} lineHeight={38} weight="semibold" style={styles.title}>
-        Centro de alertas
-      </AppText>
+      <View style={styles.titleRow}>
+        <BackButton onPress={() => (router.canGoBack() ? router.back() : router.navigate('/plants'))} />
+        <AppText size={28} lineHeight={38} weight="semibold">
+          Centro de alertas
+        </AppText>
+      </View>
       <AppText size={12} lineHeight={16} color={colors.muted} style={styles.subtitle}>
         {subtitle}
       </AppText>
@@ -98,8 +102,8 @@ export default function Alerts() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.white },
   content: { paddingHorizontal: gutter, paddingBottom: 32 },
-  title: { marginTop: 8 },
-  subtitle: { marginTop: 10 },
+  titleRow: { marginTop: 4, marginLeft: -11, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  subtitle: { marginTop: 12 },
   filters: { marginTop: 18 },
   list: { marginTop: 24, gap: 14 },
   empty: {

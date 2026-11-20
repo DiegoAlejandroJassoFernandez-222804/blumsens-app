@@ -25,7 +25,15 @@ import { getSpecies } from '@/data/species';
 import { nextModuleId, useGarden } from '@/store/garden';
 import { colors, gutter, radius } from '@/theme';
 
-const MODULE_RE = /BLM-ESP32-\d{3}/;
+/**
+ * Número de serie del módulo. El QR impreso en el módulo contiene solo este texto
+ * (p. ej. "BLM-ESP32-004"). Se aceptan letras, números, guion, guion bajo y punto.
+ */
+const SERIAL_RE = /^[A-Z0-9][A-Z0-9._-]{2,39}$/;
+
+function normalizeSerial(text: string): string {
+  return text.trim().toUpperCase();
+}
 
 function CheckRow({ icon: Icon, label, done, busy }: { icon: FC<SvgProps>; label: string; done: boolean; busy: boolean }) {
   return (
@@ -97,14 +105,18 @@ export default function LinkModule() {
   const modules = useGarden(useShallow((s) => s.modules));
   const finalizeDraft = useGarden((s) => s.finalizeDraft);
   const [permission, requestPermission] = useCameraPermissions();
-  const [cameraOn, setCameraOn] = useState(false);
+  const [cameraPaused, setCameraPaused] = useState(false);
+  const [scannedSerial, setScannedSerial] = useState<string | null>(null);
   const [moduleId, setModuleId] = useState('');
   const [verifiedId, setVerifiedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const scanned = useRef(false);
 
-  const normalized = moduleId.trim().toUpperCase();
-  const valid = /^BLM-ESP32-\d{3}$/.test(normalized);
+  const normalized = normalizeSerial(moduleId);
+  const valid = SERIAL_RE.test(normalized);
+  // La cámara arranca sola en cuanto hay permiso; se pausa al leer un código.
+  const canScan = Platform.OS !== 'web' && !!permission?.granted;
+  const cameraOn = canScan && !cameraPaused && !scannedSerial;
   const taken = valid && modules.some((m) => m.id === normalized);
   const ready = valid && !taken;
   const verified = ready && verifiedId === normalized;
@@ -124,26 +136,48 @@ export default function LinkModule() {
   const species = getSpecies(draft?.speciesId ?? '');
   const suggested = nextModuleId(modules);
 
+  /** El QR del módulo contiene únicamente su número de serie en texto plano. */
   const onBarcode = ({ data }: BarcodeScanningResult) => {
     if (scanned.current) return;
     scanned.current = true;
-    setCameraOn(false);
-    const match = data.toUpperCase().match(MODULE_RE);
-    if (match) {
+    const serial = normalizeSerial(data);
+    if (SERIAL_RE.test(serial)) {
       tapFeedback();
-      setModuleId(match[0]);
+      setScannedSerial(serial);
+      setModuleId(serial);
     } else {
-      Alert.alert('QR no reconocido', 'Ese código no pertenece a un módulo BlümSens. Prueba con el QR impreso en tu ESP32.');
+      setCameraPaused(true);
+      Alert.alert(
+        'QR no reconocido',
+        'Ese código no contiene un número de serie de módulo válido. Prueba con el QR impreso en tu módulo.',
+        [{ text: 'Reintentar', onPress: scanAgain }],
+      );
     }
   };
 
+  function scanAgain() {
+    scanned.current = false;
+    setScannedSerial(null);
+    setCameraPaused(false);
+  }
+
   const enableCamera = async () => {
     const res = permission?.granted ? permission : await requestPermission();
-    if (res?.granted) {
-      scanned.current = false;
-      setCameraOn(true);
+    if (res?.granted) scanAgain();
+    else if (res && !res.canAskAgain) {
+      Alert.alert('Cámara bloqueada', 'Activa el permiso de cámara para Expo Go en los ajustes del teléfono.');
     }
   };
+
+  const caption = cameraOn
+    ? 'Apunta al QR de tu dispositivo'
+    : scannedSerial
+      ? `Código leído: ${scannedSerial}`
+      : canScan
+        ? 'Cámara en pausa'
+        : Platform.OS === 'web'
+          ? 'Escaneo disponible en la app móvil'
+          : 'Activa la cámara para escanear el QR';
 
   const finish = () => {
     setSaving(true);
@@ -169,9 +203,54 @@ export default function LinkModule() {
             {cameraOn ? (
               <CameraView
                 style={StyleSheet.absoluteFill}
+                facing="back"
                 barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
                 onBarcodeScanned={onBarcode}
               />
+            ) : (
+              <View style={styles.qr}>
+                <Graphics.qrModule width={203} height={203} style={scannedSerial ? undefined : styles.qrIdle} />
+              </View>
+            )}
+            <View pointerEvents="none" style={styles.frame}>
+              <Graphics.qrFrame width={213} height={204} />
+            </View>
+            {scannedSerial ? (
+              <View pointerEvents="none" style={styles.scannedBadge}>
+                <Icons.check22 width={22} height={22} />
+              </View>
+            ) : null}
+            <AppText
+              size={12}
+              lineHeight={16}
+              weight="medium"
+              color={cameraOn ? colors.white : colors.forest}
+              align="center"
+              style={styles.caption}
+              numberOfLines={1}
+            >
+              {caption}
+            </AppText>
+
+            {/* Acciones del lector */}
+            {!canScan && Platform.OS !== 'web' ? (
+              <Button variant="compact" label="Activar cámara" onPress={enableCamera} style={styles.scanAction} />
+            ) : null}
+            {canScan && cameraPaused && !scannedSerial ? (
+              <Button variant="compact" label="Reanudar cámara" onPress={scanAgain} style={styles.scanAction} />
+            ) : null}
+            {cameraOn ? (
+              <Pressable onPress={() => setCameraPaused(true)} style={styles.cameraToggle}>
+                <AppText size={11} lineHeight={15} weight="semibold" color={colors.forest}>
+                  Pausar cámara
+                </AppText>
+              </Pressable>
+            ) : canScan && scannedSerial ? (
+              <Pressable onPress={scanAgain} style={styles.cameraToggle}>
+                <AppText size={11} lineHeight={15} weight="semibold" color={colors.forest}>
+                  Escanear otro
+                </AppText>
+              </Pressable>
             ) : (
               <Pressable
                 accessibilityRole="button"
@@ -180,31 +259,13 @@ export default function LinkModule() {
                   tapFeedback();
                   setModuleId(suggested);
                 }}
-                style={styles.qr}
+                style={styles.cameraToggle}
               >
-                <Graphics.qrModule width={203} height={203} />
-              </Pressable>
-            )}
-            <View pointerEvents="none" style={styles.frame}>
-              <Graphics.qrFrame width={213} height={204} />
-            </View>
-            <AppText
-              size={12}
-              lineHeight={16}
-              weight="medium"
-              color={cameraOn ? colors.white : colors.forest}
-              align="center"
-              style={styles.caption}
-            >
-              {cameraOn ? 'Apunta al QR de tu dispositivo' : 'Toca el código para simular el escaneo'}
-            </AppText>
-            {Platform.OS !== 'web' ? (
-              <Pressable onPress={cameraOn ? () => setCameraOn(false) : enableCamera} style={styles.cameraToggle}>
                 <AppText size={11} lineHeight={15} weight="semibold" color={colors.forest}>
-                  {cameraOn ? 'Cerrar cámara' : 'Usar cámara'}
+                  Simular escaneo
                 </AppText>
               </Pressable>
-            ) : null}
+            )}
           </View>
 
           <AppText size={13} lineHeight={18} weight="medium" style={styles.label}>
@@ -248,6 +309,19 @@ const styles = StyleSheet.create({
   empty: { flex: 1, backgroundColor: colors.white, paddingHorizontal: gutter, gap: 20 },
   scanner: { height: 292, borderRadius: radius.card, backgroundColor: colors.scannerGrey, overflow: 'hidden' },
   qr: { position: 'absolute', top: 35.5, alignSelf: 'center' },
+  qrIdle: { opacity: 0.25 },
+  scannedBadge: {
+    position: 'absolute',
+    top: 122,
+    alignSelf: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanAction: { position: 'absolute', top: 117, alignSelf: 'center', paddingHorizontal: 18 },
   frame: { position: 'absolute', top: 36, alignSelf: 'center' },
   caption: { position: 'absolute', left: 0, right: 0, top: 263 },
   cameraToggle: {

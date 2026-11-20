@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icons } from '@/assets';
 import { AppText } from '@/components/AppText';
 import { LineChartCard } from '@/components/LineChart';
+import { NotificationBell } from '@/components/NotificationBell';
 import { PlantPhoto } from '@/components/PlantPhoto';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -44,7 +45,11 @@ export default function History() {
         contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title="Historial y evolución" subtitle={`${plant.name} · Tu jardín, día a día.`} />
+        <ScreenHeader
+          title="Historial y evolución"
+          subtitle={`${plant.name} · Tu jardín, día a día.`}
+          right={<NotificationBell />}
+        />
 
         <View style={[styles.body, styles.filters]}>
           <SegmentedControl options={RANGES} value={range} onChange={setRange} />
